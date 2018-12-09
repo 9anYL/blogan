@@ -68,6 +68,8 @@
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
+  <!-- '/'代表全路径匹配，比如，当存在精确匹配'/test'的TestServlet时，会使用TestServlet；
+  		而'/*'，是通配符版的全路径匹配，对程序而言，只要匹配'/',就会使用该Servlet,因此不会对'*'做精确匹配，从而具有强制性 -->
   <servlet-mapping>
     <servlet-name>springDispatcher</servlet-name>
     <url-pattern>/</url-pattern>

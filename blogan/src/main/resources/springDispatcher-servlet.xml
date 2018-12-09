@@ -13,6 +13,7 @@
     <context:component-scan base-package="life.gan.blogan.controller"/>
     
     <mvc:annotation-driven validator="validator"/>
+    <mvc:resources mapping="/static/**" location="/static/"/>
     
     <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 	    <property name="prefix" value="/WEB-INF/view/"/>
