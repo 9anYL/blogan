@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<!-- 	status		:应记录到控制台的内部Log4j事件的级别 		-->
+<!-- monitorInterval:设置自动配置间隔时间（秒,min=5s） 			-->
+<!-- 	strict		:是否启用严格的XML格式 (默认false)			-->
+<Configuration status="INFO" monitorInterval="30">
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="[%p] [%d] [CLASS]:(%c{10}:%L) [METHOD]:%M%n  %m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+  	<logger name="org.springframework" level="DEBUG"/>
+  	<logger name="org.mybatis" level="DEBUG"/>
+  	<logger name="org.apache.shiro" level="DEBUG"/>
+  	<logger name="life.gan.blogan" level="TRACE" additivity="false">
+  		<appender-ref ref="Console"/>
+  	</logger>
+    <Root level="DEBUG">
+      <AppenderRef ref="Console"/>
+    </Root>
+  </Loggers>
+</Configuration>

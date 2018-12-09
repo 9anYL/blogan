@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation=
+    	"http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+        
+    <context:component-scan base-package="life.gan.blogan.service"/>
+    <aop:aspectj-autoproxy/>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	     |								DAO								      	   |
+	     +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<!-- 指定占位符配对文件 -->
+	<!-- <context:property-placeholder location="classpath:db.properties"/> -->
+	<!-- 配置数据源druid -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+	    <property name="url" value="jdbc:mysql://localhost:3306/blogdb"/>
+	    <property name="username" value="root"/>
+	    <property name="password" value="root"/>
+	</bean>
+	<!-- 通过SqlSessionFactoryBean产生SqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  		<property name="dataSource" ref="dataSource" />
+  		<!-- 若Mapper的XML文件与类文件不在同一路径下，需配置mapperLocations -->
+  		<!-- <property name="mapperLocations" value="classpath*:/life/gan/dao/*.xml" /> -->
+  		<!-- 1、通过configLocation指定Mybatis的XML配置文件路径 -->
+  		<!-- <property name="configLocation" value="classpath:mybatis/sqlMapConfig.xml" /> -->
+  		<!-- 2、通过 configuration属性配置Mybatis-->
+  		<!-- <property name="configuration"> -->
+    	<!-- 	<bean class="org.apache.ibatis.session.Configuration"> -->
+      	<!-- 		<property name="mapUnderscoreToCamelCase" value="true"/> -->
+    	<!-- 	</bean> -->
+  		<!-- </property> -->
+	</bean>
+	<!-- A.通过 MapperFactoryBean(动态代理实现)处理 SqlSession的创建和关闭-->
+	<!-- <bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean"> -->
+  	<!-- 	<property name="mapperInterface" value="life.gan.blogan.dao.UserMapper" /> -->
+  	<!-- 	<property name="sqlSessionFactory" ref="sqlSessionFactory" /> -->
+	<!-- </bean> -->
+	<!-- B.通过MapperScannerConfigurer扫描指定包内Mapper,并将他们创建成MapperFactoryBean -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+  		<property name="basePackage" value="life.gan.blogan.dao" />
+  		<!-- 当配置多个数据源时，自动装配SqlSessionFactory失效-->
+  		<!-- <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" /> -->
+	</bean>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	     |								Shiro								       |
+	     +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+	    <property name="securityManager" ref="securityManager"/>
+	    <property name="loginUrl" value="/home"/>
+	    <property name="unauthorizedUrl" value="/home" />
+	    <property name="filterChainDefinitions">
+	        <value>
+	        	/user/login=anon
+	        	/user/register=anon
+	        	/user/list = authc, perms[listUser]
+	        	/user/* = authc
+	        </value>
+	    </property>
+	</bean>
+	<!-- 自定义Filter将由shiroFilter配置到filterChainDefinitions中 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+	    <property name="realm" ref="myRealm"/>
+	</bean>
+	
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+	
+	<bean id="myRealm" class="life.gan.blogan.util.MyRealm"/>
+	<!--++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	 |								Transaction							       |
+	 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-->
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    	<property name="dataSource" ref="dataSource"/>
+	</bean>
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <tx:method name="modify*" propagation="REQUIRED"/>
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+    	<aop:pointcut id="pointCuts" expression="execution(* life.gan.blogan.service.*.*(..))"/>
+	    <aop:advisor advice-ref="txAdvice" pointcut-ref="pointCuts"/>
+	</aop:config>
+</beans>
