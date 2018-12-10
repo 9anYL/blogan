@@ -12,9 +12,7 @@
   	  $( document ).ready(function() {
   		$( #login ).click(function( event ) {
     		  
-    	  });
   	  });
-  	  
   	</script>
     <title>[Blog for 9an]-home</title>
   </head>
